@@ -323,3 +323,20 @@ cat ~/.ssh/id_ed25519.pub      # paste this into DigitalOcean → SSH Keys
 # 3. connect from anywhere
 ssh root@<DROPLET_PUBLIC_IP>
 ```
+
+
+---
+---
+---
+---
+
+<br>
+
+
+# For project:
+
+This was the reference project: 
+<br>
+
+https://github.com/floci-io/floci
+
