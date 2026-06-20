@@ -92,7 +92,7 @@ export default function App() {
         <div className="brand">
           <span className="puff" aria-hidden="true" />
           <span className="brand-name">
-            floci<span className="brand-dim"> · ec2 console</span>
+            AIA EC2 Clone<span className="brand-dim"> · ec2 console</span>
           </span>
         </div>
         <div className="conn">
