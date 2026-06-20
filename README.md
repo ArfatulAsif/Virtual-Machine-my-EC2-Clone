@@ -1,4 +1,6 @@
-# Build a Lightweight Ubuntu VM and another is using DigitalOcean (requires 4 dollar/month)
+# Build a Lightweight Ubuntu VM and another is using DigitalOcean:
+
+Minimum of 4 dollar required for DigitalOcan, but it was extremely slow with devstack.
 
 
 <div align="center">
