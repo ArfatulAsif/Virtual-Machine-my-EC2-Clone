@@ -1,0 +1,9 @@
+services:
+  floci:
+    image: floci/floci:latest
+    ports:
+      - "4566:4566"
+    # EC2 launches real Docker containers, so floci needs the Docker socket.
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    user: root
