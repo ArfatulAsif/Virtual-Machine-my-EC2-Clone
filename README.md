@@ -341,3 +341,134 @@ This was the reference project:
 https://github.com/floci-io/floci
 
 
+
+
+
+
+<br>
+<br>
+<br>
+
+---
+---
+---
+
+
+
+
+---
+
+# floci EC2 Console
+
+
+
+
+
+A lightweight, React-based management interface for AWS EC2.
+
+Currently, this project is configured to run against **floci**, a local AWS emulator. It allows you to launch, start, stop, reboot, and terminate simulated EC2 instances (which run as local Docker containers) directly from your browser—no AWS account required.
+
+
+
+<img src="images/instance creation.png">
+
+<img src="images/doker.png">
+
+## ⚠️ Important Context: This is an Emulator Environment
+
+Out of the box, this application **does not connect to the real AWS cloud**.
+
+* It routes AWS API calls through a local Vite proxy (`/aws` → `http://localhost:4566`).
+* It uses dummy credentials (`test` / `test`).
+* The "instances" it spins up are actually Docker containers running on your local machine, mapped to fake AMI IDs by the `floci` service.
+
+---
+
+## Prerequisites (Local Emulator Setup)
+
+To run the project locally, you will need:
+
+* **Node.js** (v18 or higher)
+* **Docker** (Required because `floci` launches real containers to simulate EC2 instances)
+
+---
+
+## Quick Start (Running the Emulator)
+
+### 1. Start the floci Emulator
+
+The floci EC2 service needs access to your Docker daemon to spin up containers. Use the provided Docker Compose file to start it:
+
+```bash
+# Start floci (EC2 needs the Docker socket, so the compose file mounts it)
+docker compose -f floci-compose.yaml up -d
+
+```
+
+*floci is now serving the simulated AWS API at `http://localhost:4566`.*
+
+### 2. Start the React Console
+
+In a new terminal window, install the dependencies and start the Vite development server:
+
+```bash
+npm install
+npm run dev
+
+```
+
+Open the URL printed in your terminal (usually `http://localhost:5173`). You can now use the UI to launch and manage local simulated instances.
+
+---
+
+## Transitioning to Real AWS (Production Steps)
+
+If you want to stop using the local emulator and point this dashboard at the **real AWS Cloud**, you must make the following changes to the codebase.
+
+### Step 1: Update the EC2 Client (`src/ec2.js`)
+
+You need to remove the local endpoint override so the AWS SDK routes requests to actual Amazon servers.
+
+**Find this block:**
+
+```javascript
+const client = new EC2Client({
+  region: 'us-east-1',
+  endpoint: `${window.location.origin}/aws`, // Remove this
+  credentials: { accessKeyId: 'test', secretAccessKey: 'test' }, // Remove this
+})
+
+```
+
+**Change it to:**
+
+```javascript
+const client = new EC2Client({
+  region: 'us-east-1',
+  // In a browser, you must provide real credentials, 
+  // but NEVER hardcode them in version control!
+  credentials: { 
+    accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY, 
+    secretAccessKey: import.meta.env.VITE_AWS_SECRET_KEY 
+  },
+})
+
+```
+
+### Step 2: Handle Authentication & Security Properly
+
+**Security Warning:** This is a frontend React application. If you put real AWS Access Keys directly into the frontend code, anyone who opens your website can steal them and compromise your AWS account.
+
+For a real production app, you have two safe options:
+
+1. **The Backend Approach (Recommended):** Build a separate backend server (e.g., Node.js, FastAPI). Your React app sends a simple `POST /launch` request to your backend, and your backend holds the secure AWS keys and makes the actual `EC2Client` calls.
+2. **Amazon Cognito:** Use AWS Cognito to issue temporary, scoped permissions directly to the browser session.
+
+### Step 3: Use Real AMIs and Key Pairs
+
+* **AMIs:** You can no longer use dummy AMI strings. You must use real AWS Machine Image IDs specific to your region (e.g., an Amazon Linux 2023 AMI like `ami-0c55b159cbfafe1f0`).
+* **SSH Access:** To access real EC2 instances, you must attach a Key Pair. Update the `RunInstancesCommand` in `ec2.js` to include the `KeyName` parameter, and ensure you have the corresponding `.pem` file downloaded from your AWS console.
+
+### Step 4: Handle CORS (Cross-Origin Resource Sharing)
+
+If you continue to make AWS SDK calls directly from the browser to AWS, you may run into CORS errors. AWS APIs require specific configurations to accept requests directly from a web browser. (This is another reason why moving the AWS SDK calls to a custom backend server is the recommended architecture for real deployments).
